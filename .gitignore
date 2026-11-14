@@ -1,0 +1,8 @@
+# Hasil build: dibuat ulang lewat build.sh
+mac-everything.app/
+AppIcon.iconset/
+
+# Berkas lokal, bukan bagian proyek
+.claude/
+anti-slop/
+.DS_Store

@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mac-everything: pencarian nama file instan untuk macOS</title>
+<meta name="description" content="Cari file apa pun di Mac berdasarkan namanya, seketika. Ringan, gratis, tanpa pengaturan.">
+<link rel="icon" type="image/png" href="icon.png">
+<style>
+  :root {
+    --bg: #e8e8e8;
+    --ink: #121212;
+    --muted: #4f4f4f;
+    --line: rgba(0,0,0,.10);
+    --panel: rgba(255,255,255,.45);
+    --glass: rgba(255,255,255,.38);
+    --glass-edge: rgba(255,255,255,.8);
+    --glass-shine: rgba(255,255,255,.6);
+    --shadow: 0 12px 40px rgba(0,0,0,.09);
+    --blob1: #ffffff;
+    --blob2: #c8c8c8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #121212;
+      --ink: #e8e8e8;
+      --muted: #a8a8a8;
+      --line: rgba(255,255,255,.10);
+      --panel: rgba(255,255,255,.06);
+      --glass: rgba(255,255,255,.055);
+      --glass-edge: rgba(255,255,255,.13);
+      --glass-shine: rgba(255,255,255,.08);
+      --shadow: 0 12px 40px rgba(0,0,0,.5);
+      --blob1: #2a2a2a;
+      --blob2: #000000;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 17px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  body::before {
+    content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background:
+      radial-gradient(38vmax 38vmax at 12% 8%, var(--blob1), transparent 70%),
+      radial-gradient(42vmax 42vmax at 92% 32%, var(--blob2), transparent 70%),
+      radial-gradient(36vmax 36vmax at 8% 68%, var(--blob2), transparent 70%),
+      radial-gradient(40vmax 40vmax at 80% 96%, var(--blob1), transparent 70%);
+  }
+  .glass {
+    background: var(--glass);
+    border: 1px solid var(--glass-edge);
+    border-radius: 24px;
+    -webkit-backdrop-filter: blur(26px) saturate(150%);
+    backdrop-filter: blur(26px) saturate(150%);
+    box-shadow: var(--shadow), inset 0 1px 0 var(--glass-shine);
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 0 24px; }
+
+  header { position: sticky; top: 14px; z-index: 10; margin-top: 14px; padding: 4px 14px 4px 22px; border-radius: 999px; display: flex; align-items: center; justify-content: space-between; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px; letter-spacing: .01em; }
+  .brand img { width: 30px; height: 30px; display: block; }
+  header a { color: var(--muted); text-decoration: none; font-size: 15px; display: inline-flex; align-items: center; min-height: 44px; padding: 0 10px; }
+  header a:hover { color: var(--ink); }
+
+  .hero { padding: 9vh 0 11vh; text-align: center; }
+  h1 {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+    font-weight: 900;
+    font-stretch: 125%;
+    font-size: clamp(40px, 11.5vw, 124px);
+    letter-spacing: .02em;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+  .tagline { margin: 28px auto 0; max-width: 30em; font-size: clamp(18px, 2.4vw, 22px); color: var(--muted); text-wrap: balance; }
+  .tagline b { color: var(--ink); font-weight: 600; }
+
+  .cta { margin-top: 44px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: var(--ink); color: var(--bg);
+    padding: 16px 30px; border-radius: 999px;
+    font-weight: 600; font-size: 17px; text-decoration: none;
+    transition: transform .15s ease, opacity .15s ease;
+  }
+  .btn:hover { transform: translateY(-1px); opacity: .88; }
+  .btn:active { transform: none; }
+  .btn:focus-visible, a:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+  .btn svg { width: 18px; height: 18px; }
+  .meta { font-size: 14px; color: var(--muted); }
+  .meta a { color: var(--ink); text-underline-offset: 3px; }
+  .sum { max-width: 34em; }
+  .sum code { white-space: normal; word-break: break-all; font-size: 12.5px; }
+
+  .shot { margin: 72px auto 0; max-width: 760px; padding: 8px; border-radius: 20px; }
+  .shot img { display: block; width: 100%; height: auto; border-radius: 12px; }
+  .note { margin-top: 14px; }
+
+  section { margin: 0 0 72px; scroll-margin-top: 90px; }
+  section.glass { padding: 40px; }
+  h2 { font-size: 13px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-bottom: 28px; }
+  .pitch { padding: 8px 6px 0; }
+  .pitch h2 {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+    font-weight: 900; font-stretch: 125%; font-size: clamp(30px, 5.4vw, 54px);
+    line-height: 1.08; letter-spacing: .01em; text-transform: none; color: var(--ink);
+    max-width: 13em; margin-bottom: 26px; text-wrap: balance;
+  }
+  .pitch p { font-size: clamp(17px, 2vw, 20px); color: var(--muted); max-width: 34em; }
+  .pitch p + p { margin-top: 16px; }
+  .pitch strong { color: var(--ink); font-weight: 600; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .grid > div { padding: 28px 26px; }
+  .grid h3 { font-size: 19px; font-weight: 700; margin-bottom: 8px; letter-spacing: -.01em; }
+  .grid p, .steps p { color: var(--muted); font-size: 16px; }
+
+  .syntax { width: 100%; border-collapse: collapse; font-size: 16px; }
+  .syntax td { padding: 14px 0; border-top: 1px solid var(--line); vertical-align: top; }
+  .syntax tr:first-child td { border-top: 0; padding-top: 0; }
+  .syntax td:first-child { width: 42%; padding-right: 20px; }
+  .syntax td:last-child { color: var(--muted); }
+  code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: .92em; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 2px 7px; color: var(--ink); white-space: nowrap; }
+
+  .steps { counter-reset: s; list-style: none; display: grid; gap: 26px; max-width: 620px; }
+  .steps li { counter-increment: s; display: grid; grid-template-columns: 38px 1fr; }
+  .steps li::before { content: counter(s); font-weight: 800; font-size: 19px; }
+  .steps strong { display: block; font-size: 17px; font-weight: 600; color: var(--ink); }
+
+  footer a { color: var(--ink); font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; min-height: 44px; }
+  footer a:hover { text-decoration: underline; text-underline-offset: 3px; }
+  footer { padding: 0 6px 48px; color: var(--muted); font-size: 14px; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+
+  @media (max-width: 720px) {
+    .grid { grid-template-columns: 1fr; gap: 14px; }
+    .hero { padding: 6vh 0 8vh; }
+    section { margin-bottom: 48px; }
+    section.glass { padding: 28px 22px; }
+    .syntax td { display: block; width: 100% !important; border-top: 0; padding: 0; }
+    .syntax td:first-child { border-top: 1px solid var(--line); padding-top: 16px; }
+    .syntax tr:first-child td:first-child { border-top: 0; padding-top: 0; }
+    .syntax td:last-child { padding: 6px 0 16px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .btn { transition: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="glass">
+    <div class="brand">mac-everything</div>
+    <nav aria-label="Halaman"><a href="#pasang">Cara memasang</a></nav>
+  </header>
+
+  <main>
+    <div class="hero">
+      <h1>Everything</h1>
+      <p class="tagline">Cari file apa pun di Mac berdasarkan namanya. <b>Hasil muncul selagi Anda mengetik.</b></p>
+
+      <div class="cta">
+        <a class="btn" href="mac-everything.dmg" download>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12m0 0l-5-5m5 5l5-5M5 20h14"/></svg>
+          Unduh untuk macOS
+        </a>
+        <p class="meta">Gratis · di bawah 1 MB · macOS 12 ke atas · Apple Silicon · <a href="LICENSE">Lisensi MIT</a></p>
+        <p class="meta sum">SHA-256 <code>b41cb994a6f36882e6792f44e66455948aea031d2db6a60e7d05b59903519e29</code></p>
+      </div>
+
+      <div class="shot glass">
+        <picture>
+          <source srcset="app-gelap.jpg" media="(prefers-color-scheme: dark)">
+          <img src="app-terang.jpg" width="1600" height="953" fetchpriority="high" alt="Jendela mac-everything dengan pencarian “/applications .app”: kolom pencarian di atas, lalu daftar 43 aplikasi di folder Applications dengan kolom Nama, Lokasi, Ukuran, dan Diubah.">
+        </picture>
+      </div>
+      <p class="meta note">Tangkapan layar aplikasi saat mencari semua aplikasi di folder Applications.</p>
+    </div>
+
+    <section class="pitch">
+      <h2>Pencarian bawaan kadang tidak sat set.</h2>
+      <p>Spotlight mencari di mana-mana sekaligus: isi dokumen, email, kontak, sampai saran dari web. Itu berguna untuk banyak hal. Tapi saat Anda cuma ingat nama filenya, file itu kadang tenggelam di antara hasil lain, atau baru muncul setelah jeda.</p>
+      <p><strong>mac-everything mengerjakan satu hal saja: mencocokkan nama file.</strong> Ketik beberapa huruf, daftarnya langsung menyusut ke file yang Anda cari. Tanpa menunggu, tanpa hasil yang tidak diminta.</p>
+    </section>
+
+    <section>
+      <h2>Kenapa cepat</h2>
+      <div class="grid">
+        <div class="glass">
+          <h3>Hanya nama file</h3>
+          <p>Yang diindeks cuma nama, bukan isi. Seluruh indeks muat di memori dan dipindai paralel di semua inti CPU.</p>
+        </div>
+        <div class="glass">
+          <h3>Selalu terkini</h3>
+          <p>Perubahan di disk dipantau terus-menerus. File yang baru dibuat, dipindah, atau dihapus langsung tercermin di hasil.</p>
+        </div>
+        <div class="glass">
+          <h3>Langsung siap</h3>
+          <p>Indeks disimpan ke disk, jadi saat aplikasi dibuka lagi Anda bisa langsung mencari tanpa menunggu.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="glass">
+      <h2>Cara mencari</h2>
+      <table class="syntax">
+        <tr><td><code>laporan pdf</code></td><td>Spasi berarti DAN: nama harus memuat kedua kata.</td></tr>
+        <tr><td><code>laporan !draf</code></td><td>Tanda seru mengecualikan: memuat “laporan” tetapi tidak “draf”.</td></tr>
+        <tr><td><code>kantor/laporan</code></td><td>Garis miring mencocokkan seluruh path, bukan hanya nama file.</td></tr>
+      </table>
+    </section>
+
+    <section id="pasang" class="glass">
+      <h2>Cara memasang</h2>
+      <ol class="steps">
+        <li><div><strong>Unduh dan buka file DMG</strong><p>Klik dua kali <code>mac-everything.dmg</code> yang baru diunduh.</p></div></li>
+        <li><div><strong>Seret ke Applications</strong><p>Seret ikon mac-everything ke folder Applications di jendela yang muncul.</p></div></li>
+        <li><div><strong>Izinkan saat pertama dibuka</strong><p>Aplikasi ini belum dinotarisasi Apple, jadi macOS akan menahannya. Buka System Settings → Privacy &amp; Security, lalu klik “Open Anyway”. Cukup sekali.</p></div></li>
+      </ol>
+    </section>
+  </main>
+
+  <footer>
+    <span>mac-everything 1.0 · dibuat oleh <a href="https://ihsanmokhsen.com">ihsanmokhsen.com</a> · <a href="LICENSE">Lisensi MIT</a></span>
+    <span>Terinspirasi oleh Everything dari voidtools untuk Windows.</span>
+  </footer>
+
+</div>
+</body>
+</html>
