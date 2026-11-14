@@ -4,7 +4,7 @@ Pencarian nama file instan untuk macOS. Ketik beberapa huruf, daftarnya langsung
 
 Spotlight mencari di mana-mana sekaligus: isi dokumen, email, kontak, sampai saran dari web. mac-everything mengerjakan satu hal saja, yaitu mencocokkan nama file, terinspirasi oleh Everything dari voidtools untuk Windows.
 
-**Unduh:** [ihsanmokhsen.github.io/mac-everything](https://ihsanmokhsen.github.io/mac-everything/)
+**Unduh:** [everything.ihsanmokhsen.com](https://everything.ihsanmokhsen.com/)
 
 ![Jendela mac-everything saat mencari semua aplikasi di folder Applications](app-terang.jpg)
 
